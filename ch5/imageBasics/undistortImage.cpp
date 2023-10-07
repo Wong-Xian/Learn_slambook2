@@ -3,7 +3,7 @@
 
 using namespace std;
 
-string image_file = "./distorted.png";   // 请确保路径正确
+string image_file = "../distorted.png";   // 请确保路径正确
 
 int main(int argc, char **argv) {
 
@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 
   cv::Mat image = cv::imread(image_file, 0);   // 图像是灰度图，CV_8UC1
   int rows = image.rows, cols = image.cols;
-  cv::Mat image_undistort = cv::Mat(rows, cols, CV_8UC1);   // 去畸变以后的图
+  cv::Mat image_undistort = cv::Mat(rows, cols, CV_8UC1);   // 创建去畸变以后的图
 
   // 计算去畸变后图像的内容
   for (int v = 0; v < rows; v++) {
@@ -29,9 +29,9 @@ int main(int argc, char **argv) {
       double v_distorted = fy * y_distorted + cy;
 
       // 赋值 (最近邻插值)
-      if (u_distorted >= 0 && v_distorted >= 0 && u_distorted < cols && v_distorted < rows) {
+      if (u_distorted >= 0 && v_distorted >= 0 && u_distorted < cols && v_distorted < rows) { // 在图像范围内
         image_undistort.at<uchar>(v, u) = image.at<uchar>((int) v_distorted, (int) u_distorted);
-      } else {
+      } else {  // 在图像范围外
         image_undistort.at<uchar>(v, u) = 0;
       }
     }
