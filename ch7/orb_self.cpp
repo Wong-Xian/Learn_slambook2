@@ -10,8 +10,8 @@
 using namespace std;
 
 // global variables
-string first_file = "./1.png";
-string second_file = "./2.png";
+string first_file = "../1.png";
+string second_file = "../2.png";
 
 // 32 bit unsigned int, will have 8, 8x32=256
 typedef vector<uint32_t> DescType; // Descriptor type
@@ -344,32 +344,32 @@ void ComputeORB(const cv::Mat &img, vector<cv::KeyPoint> &keypoints, vector<Desc
   const int half_patch_size = 8;
   const int half_boundary = 16;
   int bad_points = 0;
-  for (auto &kp: keypoints) {
+  for (auto &kp: keypoints) {// traverse all keypoints
     if (kp.pt.x < half_boundary || kp.pt.y < half_boundary ||
-        kp.pt.x >= img.cols - half_boundary || kp.pt.y >= img.rows - half_boundary) {
+        kp.pt.x >= img.cols - half_boundary || kp.pt.y >= img.rows - half_boundary) {// when kp is too close to boundary
       // outside
-      bad_points++;
+      bad_points++;   // mark as bad point
       descriptors.push_back({});
       continue;
     }
 
     float m01 = 0, m10 = 0;
-    for (int dx = -half_patch_size; dx < half_patch_size; ++dx) {
-      for (int dy = -half_patch_size; dy < half_patch_size; ++dy) {
+    for (int dx = -half_patch_size; dx < half_patch_size; ++dx) {   // from -8 to 8
+      for (int dy = -half_patch_size; dy < half_patch_size; ++dy) { // from -8 to 8
         uchar pixel = img.at<uchar>(kp.pt.y + dy, kp.pt.x + dx);
-        m10 += dx * pixel;
-        m01 += dy * pixel;
+        m10 += dx * pixel;    // calculate m10
+        m01 += dy * pixel;    // calculate m01
       }
     }
 
     // angle should be arc tan(m01/m10);
     float m_sqrt = sqrt(m01 * m01 + m10 * m10) + 1e-18; // avoid divide by zero
-    float sin_theta = m01 / m_sqrt;
-    float cos_theta = m10 / m_sqrt;
+    float sin_theta = m01 / m_sqrt; // calculate sin
+    float cos_theta = m10 / m_sqrt; // calculate cos
 
     // compute the angle of this point
     DescType desc(8, 0);
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 8; i++) { // the i of 8, size of desc
       uint32_t d = 0;
       for (int k = 0; k < 32; k++) {
         int idx_pq = i * 32 + k;

@@ -51,8 +51,8 @@ int main(int argc, char **argv) {
     return 1;
   }
   //-- 读取图像
-  Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-  Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
+  Mat img_1 = imread(argv[1], IMREAD_COLOR);
+  Mat img_2 = imread(argv[2], IMREAD_COLOR);
   assert(img_1.data && img_2.data && "Can not load images!");
 
   vector<KeyPoint> keypoints_1, keypoints_2;
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
   cout << "一共找到了" << matches.size() << "组匹配点" << endl;
 
   // 建立3D点
-  Mat d1 = imread(argv[3], CV_LOAD_IMAGE_UNCHANGED);       // 深度图为16位无符号数，单通道图像
+  Mat d1 = imread(argv[3], IMREAD_UNCHANGED);       // 深度图为16位无符号数，单通道图像
   Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
   vector<Point3f> pts_3d;
   vector<Point2f> pts_2d;
@@ -81,11 +81,12 @@ int main(int argc, char **argv) {
   Mat r, t;
   solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false); // 调用OpenCV 的 PnP 求解，可选择EPNP，DLS等方法
   Mat R;
-  cv::Rodrigues(r, R); // r为旋转向量形式，用Rodrigues公式转换为矩阵
+  Rodrigues(r, R); // r为旋转向量形式，用Rodrigues公式转换为矩阵
   chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
   chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
   cout << "solve pnp in opencv cost time: " << time_used.count() << " seconds." << endl;
 
+  cout << "r=" << endl << r << endl;
   cout << "R=" << endl << R << endl;
   cout << "t=" << endl << t << endl;
 
@@ -102,7 +103,7 @@ int main(int argc, char **argv) {
   bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K, pose_gn);
   t2 = chrono::steady_clock::now();
   time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-  cout << "solve pnp by gauss newton cost time: " << time_used.count() << " seconds." << endl;
+  cout << "solve pnp by gauss newton cost time: " << time_used.count() << " seconds." << endl << endl;
 
   cout << "calling bundle adjustment by g2o" << endl;
   Sophus::SE3d pose_g2o;
@@ -330,8 +331,8 @@ void bundleAdjustmentG2O(
   Eigen::Matrix3d K_eigen;
   K_eigen <<
           K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
-    K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
-    K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
+          K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
+          K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
 
   // edges
   int index = 1;

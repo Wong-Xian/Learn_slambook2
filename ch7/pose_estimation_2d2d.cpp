@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
     return 1;
   }
   //-- 读取图像
-  Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-  Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
+  Mat img_1 = imread(argv[1], IMREAD_COLOR);
+  Mat img_2 = imread(argv[2], IMREAD_COLOR);
   assert(img_1.data && img_2.data && "Can not load images!");
 
   vector<KeyPoint> keypoints_1, keypoints_2;
@@ -48,9 +48,9 @@ int main(int argc, char **argv) {
 
   //-- 验证E=t^R*scale
   Mat t_x =
-    (Mat_<double>(3, 3) << 0, -t.at<double>(2, 0), t.at<double>(1, 0),
-      t.at<double>(2, 0), 0, -t.at<double>(0, 0),
-      -t.at<double>(1, 0), t.at<double>(0, 0), 0);
+    (Mat_<double>(3, 3) << 0, -t.at<double>(2, 0), t.at<double>(1, 0) ,
+        t.at<double>(2, 0)  ,         0          , -t.at<double>(0, 0),
+       -t.at<double>(1, 0)  , t.at<double>(0, 0) ,         0           );
 
   cout << "t^R=" << endl << t_x * R << endl;
 
@@ -129,6 +129,7 @@ void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
   // 相机内参,TUM Freiburg2
   Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 
+
   //-- 把匹配点转换为vector<Point2f>的形式
   vector<Point2f> points1;
   vector<Point2f> points2;
@@ -138,10 +139,12 @@ void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
     points2.push_back(keypoints_2[matches[i].trainIdx].pt);
   }
 
+
   //-- 计算基础矩阵
   Mat fundamental_matrix;
-  fundamental_matrix = findFundamentalMat(points1, points2, CV_FM_8POINT);
+  fundamental_matrix = findFundamentalMat(points1, points2, FM_8POINT); // 8 point method
   cout << "fundamental_matrix is " << endl << fundamental_matrix << endl;
+
 
   //-- 计算本质矩阵
   Point2d principal_point(325.1, 249.7);  //相机光心, TUM dataset标定值
@@ -149,6 +152,7 @@ void pose_estimation_2d2d(std::vector<KeyPoint> keypoints_1,
   Mat essential_matrix;
   essential_matrix = findEssentialMat(points1, points2, focal_length, principal_point);
   cout << "essential_matrix is " << endl << essential_matrix << endl;
+
 
   //-- 计算单应矩阵
   //-- 但是本例中场景不是平面，单应矩阵意义不大

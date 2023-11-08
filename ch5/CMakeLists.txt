@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -O2")
 include_directories("/usr/include/eigen3")
 
 # 寻找OpenCV库
+set(OpenCV_DIR /home/wx/下载/opencv3.4/opencv/build)
 find_package(OpenCV REQUIRED)
 # 添加头文件
 include_directories(${OpenCV_INCLUDE_DIRS})
