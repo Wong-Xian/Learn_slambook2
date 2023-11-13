@@ -226,13 +226,13 @@ void pose_estimation_3d3d(const vector<Point3f> &pts1,
 
   // SVD on W
   Eigen::JacobiSVD<Eigen::Matrix3d> svd(W, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  Eigen::Matrix3d U = svd.matrixU();
-  Eigen::Matrix3d V = svd.matrixV();
+  Eigen::Matrix3d U = svd.matrixU();// compute U
+  Eigen::Matrix3d V = svd.matrixV();// compute V
 
   cout << "U=" << U << endl;
   cout << "V=" << V << endl;
 
-  Eigen::Matrix3d R_ = U * (V.transpose());
+  Eigen::Matrix3d R_ = U * (V.transpose()); // compute R
   if (R_.determinant() < 0) {
     R_ = -R_;
   }

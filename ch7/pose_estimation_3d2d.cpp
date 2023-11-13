@@ -170,11 +170,8 @@ Point2d pixel2cam(const Point2d &p, const Mat &K) {
     );
 }
 
-void bundleAdjustmentGaussNewton(
-  const VecVector3d &points_3d,
-  const VecVector2d &points_2d,
-  const Mat &K,
-  Sophus::SE3d &pose) {
+void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose) 
+{
   typedef Eigen::Matrix<double, 6, 1> Vector6d;
   const int iterations = 10;
   double cost = 0, lastCost = 0;
@@ -198,7 +195,7 @@ void bundleAdjustmentGaussNewton(
       Eigen::Vector2d e = points_2d[i] - proj;
 
       cost += e.squaredNorm();
-      Eigen::Matrix<double, 2, 6> J;
+      Eigen::Matrix<double, 2, 6> J;  // 2x6 jacobian matrix
       J << -fx * inv_z,
         0,
         fx * pc[0] * inv_z2,
@@ -245,7 +242,7 @@ void bundleAdjustmentGaussNewton(
 }
 
 /// vertex and edges used in g2o ba
-class VertexPose : public g2o::BaseVertex<6, Sophus::SE3d> {
+class VertexPose : public g2o::BaseVertex<6, Sophus::SE3d> {  // define VertexPose Class
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
@@ -265,13 +262,13 @@ public:
   virtual bool write(ostream &out) const override {}
 };
 
-class EdgeProjection : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose> {
+class EdgeProjection : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose> {  // define EdgeProjection class
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-  EdgeProjection(const Eigen::Vector3d &pos, const Eigen::Matrix3d &K) : _pos3d(pos), _K(K) {}
+  EdgeProjection(const Eigen::Vector3d &pos, const Eigen::Matrix3d &K) : _pos3d(pos), _K(K) {}  // construct function
 
-  virtual void computeError() override {
+  virtual void computeError() override {  // rewrite virtual function
     const VertexPose *v = static_cast<VertexPose *> (_vertices[0]);
     Sophus::SE3d T = v->estimate();
     Eigen::Vector3d pos_pixel = _K * (T * _pos3d);
@@ -305,19 +302,14 @@ private:
   Eigen::Matrix3d _K;
 };
 
-void bundleAdjustmentG2O(
-  const VecVector3d &points_3d,
-  const VecVector2d &points_2d,
-  const Mat &K,
-  Sophus::SE3d &pose) {
+void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose) {
 
   // 构建图优化，先设定g2o
   typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;  // pose is 6, landmark is 3
   typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; // 线性求解器类型
   // 梯度下降方法，可以从GN, LM, DogLeg 中选
-  auto solver = new g2o::OptimizationAlgorithmGaussNewton(
-    g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
-  g2o::SparseOptimizer optimizer;     // 图模型
+  auto solver = new g2o::OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+  g2o::SparseOptimizer optimizer;   // 图模型
   optimizer.setAlgorithm(solver);   // 设置求解器
   optimizer.setVerbose(true);       // 打开调试输出
 

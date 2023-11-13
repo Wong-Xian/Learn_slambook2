@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   //-- 读取图像
   Mat img_1 = imread(argv[1], IMREAD_COLOR);
   Mat img_2 = imread(argv[2], IMREAD_COLOR);
-  assert(img_1.data != nullptr && img_2.data != nullptr);
+  assert(img_1.data != nullptr && img_2.data != nullptr);// 若括号内语句为0，则终止程序
 
   //-- 初始化
   std::vector<KeyPoint> keypoints_1, keypoints_2;
