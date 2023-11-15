@@ -11,9 +11,7 @@ public:
                                                                            observed_y(observation_y) {}
 
     template<typename T>
-    bool operator()(const T *const camera,
-                    const T *const point,
-                    T *residuals) const {
+    bool operator()(const T *const camera, const T *const point, T *residuals) const {
         // camera[0,1,2] are the angle-axis rotation
         T predictions[2];
         CamProjectionWithDistortion(camera, point, predictions);

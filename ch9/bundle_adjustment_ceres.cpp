@@ -62,7 +62,7 @@ void SolveBA(BALProblem &bal_problem) {
 
     std::cout << "Solving ceres BA ... " << endl;
     ceres::Solver::Options options;
-    options.linear_solver_type = ceres::LinearSolverType::SPARSE_SCHUR;
+    options.linear_solver_type = ceres::LinearSolverType::SPARSE_SCHUR; // 设置求解方法为稀疏Schur方法
     options.minimizer_progress_to_stdout = true;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
