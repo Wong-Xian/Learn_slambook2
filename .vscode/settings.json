@@ -2,6 +2,11 @@
     "cmake.sourceDirectory": "/home/wx/文档/slambook2/ch7",
     "ros.distro": "noetic",
     "files.associations": {
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "iostream": "cpp",
+        "*.ipp": "cpp",
+        "regex": "cpp",
+        "iosfwd": "cpp",
+        "fstream": "cpp"
     }
 }

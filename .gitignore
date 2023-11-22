@@ -34,3 +34,5 @@
 *cmake-build-*
 *.idea
 **build**
+
+remode_test_data

@@ -12,7 +12,7 @@ include_directories("/usr/include/eigen3/")
 
 # pcl 
 find_package(PCL REQUIRED)
-include_directories(${PCL_INCLUDE_DIRS})
+include_directories(${PCL_INCLUDE_DIRS} "/usr/local/include/fmt")
 add_definitions(${PCL_DEFINITIONS})
 
 # octomap 
@@ -20,10 +20,10 @@ find_package(octomap REQUIRED)
 include_directories(${OCTOMAP_INCLUDE_DIRS})
 
 add_executable(pointcloud_mapping pointcloud_mapping.cpp)
-target_link_libraries(pointcloud_mapping ${OpenCV_LIBS} ${PCL_LIBRARIES})
+target_link_libraries(pointcloud_mapping ${OpenCV_LIBS} ${PCL_LIBRARIES} fmt)
 
 add_executable(octomap_mapping octomap_mapping.cpp)
-target_link_libraries(octomap_mapping ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
+target_link_libraries(octomap_mapping ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES} fmt)
 
 add_executable(surfel_mapping surfel_mapping.cpp)
-target_link_libraries(surfel_mapping ${OpenCV_LIBS} ${PCL_LIBRARIES})
+target_link_libraries(surfel_mapping ${OpenCV_LIBS} ${PCL_LIBRARIES} fmt)

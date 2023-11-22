@@ -45,7 +45,15 @@ const double max_cov = 10;      // 发散判定：最大方差
 
 // ------------------------------------------------------------------
 // 重要的函数
-/// 从 REMODE 数据集读取数据
+/** 
+ * 这个函数的主要作用是从first_200_frames_traj_over_table_input_sequence.txt
+ * 文件中读取images文件夹中每一个图片的文件名和参数，放入color_image_files容器中
+ * 读取每个文件后面跟的 4个四元数数据 和 3个像素数据(x,y,z)
+ * @param path 传入路径
+ * @param color_image_files 容器，装所有图片的文件名
+ * @param poses 容器，装读取到的姿态参数
+ * @param ref_depth 参考深度
+*/
 bool readDatasetFiles(
     const string &path,
     vector<string> &color_image_files,
@@ -188,7 +196,7 @@ int main(int argc, char **argv) {
         cout << "Reading image files failed!" << endl;
         return -1;
     }
-    cout << "read total " << color_image_files.size() << " files." << endl;
+    cout << "read total " << color_image_files.size() << " files." << endl; // 打印总共读到多少图片
 
     // 第一张图
     Mat ref = imread(color_image_files[0], 0);                // gray-scale image
@@ -198,14 +206,14 @@ int main(int argc, char **argv) {
     Mat depth(height, width, CV_64F, init_depth);             // 深度图
     Mat depth_cov2(height, width, CV_64F, init_cov2);         // 深度图方差
 
-    for (int index = 1; index < color_image_files.size(); index++) {
+    for (int index = 1; index < color_image_files.size(); index++) {// 从第二张图片开始遍历
         cout << "*** loop " << index << " ***" << endl;
         Mat curr = imread(color_image_files[index], 0);
         if (curr.data == nullptr) continue;
         SE3d pose_curr_TWC = poses_TWC[index];
         SE3d pose_T_C_R = pose_curr_TWC.inverse() * pose_ref_TWC;   // 坐标转换关系： T_C_W * T_W_R = T_C_R
-        update(ref, curr, pose_T_C_R, depth, depth_cov2);
-        evaludateDepth(ref_depth, depth);
+        update(ref, curr, pose_T_C_R, depth, depth_cov2);   // ****问题出在这**** 里面的for循环没有打大括号！！！！！！！！！！
+        evaludateDepth(ref_depth, depth);                   // 你为什么不打大括号啊！你知道我Debug多久吗！！！！啊啊啊啊！！！！
         plotDepth(ref_depth, depth);
         imshow("image", curr);
         waitKey(1);
@@ -218,20 +226,26 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-bool readDatasetFiles(
-    const string &path,
-    vector<string> &color_image_files,
-    std::vector<SE3d> &poses,
-    cv::Mat &ref_depth) {
-    ifstream fin(path + "/first_200_frames_traj_over_table_input_sequence.txt");
+/** 
+ * 这个函数的主要作用是从first_200_frames_traj_over_table_input_sequence.txt
+ * 文件中读取images文件夹中每一个图片的文件名和参数，放入color_image_files容器中
+ * 读取每个文件后面跟的 4个四元数数据 和 3个像素数据(x,y,z)
+ * @param path 传入路径
+ * @param color_image_files 容器，装所有图片的文件名
+ * @param poses 容器，装读取到的姿态参数
+ * @param ref_depth 参考深度
+*/
+bool readDatasetFiles(const string &path, vector<string> &color_image_files, std::vector<SE3d> &poses, cv::Mat &ref_depth)
+{
+    ifstream fin(path + "/first_200_frames_traj_over_table_input_sequence.txt");// 打开txt文件
     if (!fin) return false;
 
-    while (!fin.eof()) {
+    while (!fin.eof()) {    // 文件未读取完成
         // 数据格式：图像文件名 tx, ty, tz, qx, qy, qz, qw ，注意是 TWC 而非 TCW
         string image;
-        fin >> image;
+        fin >> image; // 读取文件名（string）
         double data[7];
-        for (double &d:data) fin >> d;
+        for (double &d:data) fin >> d;  // 读取参数（double）除了第1列文件名，总共7列数据
 
         color_image_files.push_back(path + string("/images/") + image);
         poses.push_back(
@@ -240,7 +254,7 @@ bool readDatasetFiles(
         );
         if (!fin.good()) break;
     }
-    fin.close();
+    fin.close();// 关闭文件
 
     // load reference depth
     fin.open(path + "/depthmaps/scene_000.depth");
@@ -258,7 +272,7 @@ bool readDatasetFiles(
 
 // 对整个深度图进行更新
 bool update(const Mat &ref, const Mat &curr, const SE3d &T_C_R, Mat &depth, Mat &depth_cov2) {
-    for (int x = boarder; x < width - boarder; x++)
+    for (int x = boarder; x < width - boarder; x++) {
         for (int y = boarder; y < height - boarder; y++) {
             // 遍历每个像素
             if (depth_cov2.ptr<double>(y)[x] < min_cov || depth_cov2.ptr<double>(y)[x] > max_cov) // 深度已收敛或发散
@@ -276,6 +290,7 @@ bool update(const Mat &ref, const Mat &curr, const SE3d &T_C_R, Mat &depth, Mat 
                 pt_curr,
                 epipolar_direction
             );
+            //cout << "finish epipolarSearch func.\n";
 
             if (ret == false) // 匹配失败
                 continue;
@@ -286,6 +301,8 @@ bool update(const Mat &ref, const Mat &curr, const SE3d &T_C_R, Mat &depth, Mat 
             // 匹配成功，更新深度图
             updateDepthFilter(Vector2d(x, y), pt_curr, T_C_R, epipolar_direction, depth, depth_cov2);
         }
+    }
+    return true;
 }
 
 // 极线搜索
@@ -457,8 +474,8 @@ void evaludateDepth(const Mat &depth_truth, const Mat &depth_estimate) {
 
 void showEpipolarMatch(const Mat &ref, const Mat &curr, const Vector2d &px_ref, const Vector2d &px_curr) {
     Mat ref_show, curr_show;
-    cv::cvtColor(ref, ref_show, CV_GRAY2BGR);
-    cv::cvtColor(curr, curr_show, CV_GRAY2BGR);
+    cv::cvtColor(ref, ref_show, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(curr, curr_show, cv::COLOR_GRAY2BGR);
 
     cv::circle(ref_show, cv::Point2f(px_ref(0, 0), px_ref(1, 0)), 5, cv::Scalar(0, 0, 250), 2);
     cv::circle(curr_show, cv::Point2f(px_curr(0, 0), px_curr(1, 0)), 5, cv::Scalar(0, 0, 250), 2);
@@ -472,8 +489,8 @@ void showEpipolarLine(const Mat &ref, const Mat &curr, const Vector2d &px_ref, c
                       const Vector2d &px_max_curr) {
 
     Mat ref_show, curr_show;
-    cv::cvtColor(ref, ref_show, CV_GRAY2BGR);
-    cv::cvtColor(curr, curr_show, CV_GRAY2BGR);
+    cv::cvtColor(ref, ref_show, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(curr, curr_show, cv::COLOR_GRAY2BGR);
 
     cv::circle(ref_show, cv::Point2f(px_ref(0, 0), px_ref(1, 0)), 5, cv::Scalar(0, 255, 0), 2);
     cv::circle(curr_show, cv::Point2f(px_min_curr(0, 0), px_min_curr(1, 0)), 5, cv::Scalar(0, 255, 0), 2);
