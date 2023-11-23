@@ -20,41 +20,41 @@ typedef pcl::PointXYZRGBNormal SurfelT;
 typedef pcl::PointCloud<SurfelT> SurfelCloud;
 typedef pcl::PointCloud<SurfelT>::Ptr SurfelCloudPtr;
 
-SurfelCloudPtr reconstructSurface(
-        const PointCloudPtr &input, float radius, int polynomial_order) {
-    pcl::MovingLeastSquares<PointT, SurfelT> mls;
-    pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
-    mls.setSearchMethod(tree);
-    mls.setSearchRadius(radius);
-    mls.setComputeNormals(true);
-    mls.setSqrGaussParam(radius * radius);
-    mls.setPolynomialFit(polynomial_order > 1);
-    mls.setPolynomialOrder(polynomial_order);
-    mls.setInputCloud(input);
-    SurfelCloudPtr output(new SurfelCloud);
-    mls.process(*output);
+// 表面重建函数，将pcl库中的函数进行封装
+SurfelCloudPtr reconstructSurface(const PointCloudPtr &input, float radius, int polynomial_order) {
+    pcl::MovingLeastSquares<PointT, SurfelT> mls;   // 移动最小二乘法 将点云处理成平滑的面
+    pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>); // k叉树
+    mls.setSearchMethod(tree);              // 设置查找方法为 k叉树查找
+    mls.setSearchRadius(radius);            // 设置拟合 最邻近半径
+    mls.setComputeNormals(true);            // 是否保存法线
+    mls.setSqrGaussParam(radius * radius);  // 设置邻居基于距离加权的参数
+    // mls.setPolynomialFit(polynomial_order > 1);
+    mls.setPolynomialOrder(polynomial_order);// 设置拟合多项式的阶数
+    mls.setInputCloud(input);               // 输入点云
+    SurfelCloudPtr output(new SurfelCloud); // 新建输出点云指针
+    mls.process(*output);                   //计算，结果存放到output中
     return (output);
 }
 
-pcl::PolygonMeshPtr triangulateMesh(const SurfelCloudPtr &surfels) {
+pcl::PolygonMeshPtr triangulateMesh(const SurfelCloudPtr &surfels) {// 网格三角化
     // Create search tree*
-    pcl::search::KdTree<SurfelT>::Ptr tree(new pcl::search::KdTree<SurfelT>);
-    tree->setInputCloud(surfels);
+    pcl::search::KdTree<SurfelT>::Ptr tree(new pcl::search::KdTree<SurfelT>);// k叉树
+    tree->setInputCloud(surfels); // 导入点云
 
     // Initialize objects
-    pcl::GreedyProjectionTriangulation<SurfelT> gp3;
-    pcl::PolygonMeshPtr triangles(new pcl::PolygonMesh);
+    pcl::GreedyProjectionTriangulation<SurfelT> gp3;    // 对点云三角化
+    pcl::PolygonMeshPtr triangles(new pcl::PolygonMesh);// 返回值 存放返回数据
 
     // Set the maximum distance between connected points (maximum edge length)
     gp3.setSearchRadius(0.05);
 
     // Set typical values for the parameters
-    gp3.setMu(2.5);
-    gp3.setMaximumNearestNeighbors(100);
-    gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
-    gp3.setMinimumAngle(M_PI / 18); // 10 degrees
-    gp3.setMaximumAngle(2 * M_PI / 3); // 120 degrees
-    gp3.setNormalConsistency(true);
+    gp3.setMu(2.5); // 乘数？
+    gp3.setMaximumNearestNeighbors(100);    // 最大邻近值个数
+    gp3.setMaximumSurfaceAngle(M_PI / 4);   // 最大表面角度 45 degrees
+    gp3.setMinimumAngle(M_PI / 18);         // 最小角度 10 degrees
+    gp3.setMaximumAngle(2 * M_PI / 3);      // 最大角度 120 degrees
+    gp3.setNormalConsistency(true);         // 输入法线方向是否一致？ 是。
 
     // Get result
     gp3.setInputCloud(surfels);
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
     // Load the points
     PointCloudPtr cloud(new PointCloud);
-    if (argc == 0 || pcl::io::loadPCDFile(argv[1], *cloud)) {
+    if (argc == 0 || pcl::io::loadPCDFile(argv[1], *cloud)) {   // 第二个表达式，返回0表示成功，返回负数表示失败
         cout << "failed to load point cloud!";
         return 1;
     }
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     // Compute surface elements
     cout << "computing normals ... " << endl;
     double mls_radius = 0.05, polynomial_order = 2;
-    auto surfels = reconstructSurface(cloud, mls_radius, polynomial_order);
+    auto surfels = reconstructSurface(cloud, mls_radius, polynomial_order);// 重建表面
 
     // Compute a greedy surface triangulation
     cout << "computing mesh ... " << endl;
