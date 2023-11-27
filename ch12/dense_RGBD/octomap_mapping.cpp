@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
         Eigen::Quaterniond q(data[6], data[3], data[4], data[5]);
         Eigen::Isometry3d T(q);
         T.pretranslate(Eigen::Vector3d(data[0], data[1], data[2]));
-        poses.push_back(T);
+        poses.push_back(T); // 最终 T 带有【旋转】和【平移】
     }
 
     // 计算点云并拼接
@@ -43,6 +43,8 @@ int main(int argc, char **argv) {
     double fx = 481.2;
     double fy = -480.0;
     double depthScale = 5000.0;
+
+/****** 以上部分与 point cloud mapping 程序差不多 ******/
 
     cout << "正在将图像转换为 Octomap ..." << endl;
 
@@ -57,7 +59,7 @@ int main(int argc, char **argv) {
 
         octomap::Pointcloud cloud;  // the point cloud in octomap 
 
-        for (int v = 0; v < color.rows; v++)
+        for (int v = 0; v < color.rows; v++) {
             for (int u = 0; u < color.cols; u++) {
                 unsigned int d = depth.ptr<unsigned short>(v)[u]; // 深度值
                 if (d == 0) continue; // 为0表示没有测量到
@@ -65,11 +67,11 @@ int main(int argc, char **argv) {
                 point[2] = double(d) / depthScale;
                 point[0] = (u - cx) * point[2] / fx;
                 point[1] = (v - cy) * point[2] / fy;
-                Eigen::Vector3d pointWorld = T * point;
+                Eigen::Vector3d pointWorld = T * point; // 像素点经 T 转换成世界坐标
                 // 将世界坐标系的点放入点云
                 cloud.push_back(pointWorld[0], pointWorld[1], pointWorld[2]);
             }
-
+        }
         // 将点云存入八叉树地图，给定原点，这样可以计算投射线
         tree.insertPointCloud(cloud, octomap::point3d(T(0, 3), T(1, 3), T(2, 3)));
     }
