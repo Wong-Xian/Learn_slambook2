@@ -8,65 +8,55 @@
 
 namespace myslam {
 
-/**
- * @brief 地图
- * 和地图的交互：前端调用InsertKeyframe和InsertMapPoint插入新帧和地图点，后端维护地图的结构，判定outlier/剔除等等
- */
-class Map {
-   public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    typedef std::shared_ptr<Map> Ptr;
-    typedef std::unordered_map<unsigned long, MapPoint::Ptr> LandmarksType;
-    typedef std::unordered_map<unsigned long, Frame::Ptr> KeyframesType;
+    /**
+     * @brief 地图
+     * 和地图的交互：前端调用InsertKeyframe和InsertMapPoint插入新帧和地图点，后端维护地图的结构，判定outlier/剔除等等
+     */
+    class Map {
+    public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+        typedef std::shared_ptr<Map> Ptr;
+        typedef std::unordered_map<unsigned long, MapPoint::Ptr> LandmarksType;
+        typedef std::unordered_map<unsigned long, Frame::Ptr> KeyframesType;
 
-    Map() {}
+        Map() {}
 
-    /// 增加一个关键帧
-    void InsertKeyFrame(Frame::Ptr frame);
-    /// 增加一个地图顶点
-    void InsertMapPoint(MapPoint::Ptr map_point);
+        /// 增加一个关键帧
+        void InsertKeyFrame(Frame::Ptr frame);
+        
+        /// 增加一个地图顶点
+        void InsertMapPoint(MapPoint::Ptr map_point);
 
-    /// 获取所有地图点
-    LandmarksType GetAllMapPoints() {
-        std::unique_lock<std::mutex> lck(data_mutex_);
-        return landmarks_;
-    }
-    /// 获取所有关键帧
-    KeyframesType GetAllKeyFrames() {
-        std::unique_lock<std::mutex> lck(data_mutex_);
-        return keyframes_;
-    }
+        /// 获取所有地图点
+        LandmarksType GetAllMapPoints();
 
-    /// 获取激活地图点
-    LandmarksType GetActiveMapPoints() {
-        std::unique_lock<std::mutex> lck(data_mutex_);
-        return active_landmarks_;
-    }
+        /// 获取所有关键帧
+        KeyframesType GetAllKeyFrames();
 
-    /// 获取激活关键帧
-    KeyframesType GetActiveKeyFrames() {
-        std::unique_lock<std::mutex> lck(data_mutex_);
-        return active_keyframes_;
-    }
+        /// 获取激活地图点
+        LandmarksType GetActiveMapPoints();
 
-    /// 清理map中观测数量为零的点
-    void CleanMap();
+        /// 获取激活关键帧
+        KeyframesType GetActiveKeyFrames();
 
-   private:
-    // 将旧的关键帧置为不活跃状态
-    void RemoveOldKeyframe();
+        /// 清理map中观测数量为零的点
+        void CleanMap();
 
-    std::mutex data_mutex_;
-    LandmarksType landmarks_;         // all landmarks
-    LandmarksType active_landmarks_;  // active landmarks
-    KeyframesType keyframes_;         // all key-frames
-    KeyframesType active_keyframes_;  // all key-frames
+    private:
+        // 将旧的关键帧置为不活跃状态
+        void RemoveOldKeyframe();
 
-    Frame::Ptr current_frame_ = nullptr;
+        std::mutex data_mutex_;
+        LandmarksType landmarks_;         // all landmarks
+        LandmarksType active_landmarks_;  // active landmarks
+        KeyframesType keyframes_;         // all key-frames
+        KeyframesType active_keyframes_;  // all key-frames
 
-    // settings
-    int num_active_keyframes_ = 7;  // 激活的关键帧数量
-};
+        Frame::Ptr current_frame_ = nullptr;
+
+        // settings
+        int num_active_keyframes_ = 7;  // 激活的关键帧数量
+    };
 }  // namespace myslam
 
 #endif  // MAP_H
