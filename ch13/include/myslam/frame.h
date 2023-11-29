@@ -43,10 +43,7 @@ namespace myslam {
         // set and get pose, thread safe
         SE3 Pose();
 
-        void SetPose(const SE3 &pose) {
-            std::unique_lock<std::mutex> lck(pose_mutex_);
-            pose_ = pose;
-        }
+        void SetPose(const SE3 &pose);
         
         /// 工厂构建模式，分配id 
         static std::shared_ptr<Frame> CreateFrame();
